@@ -19,7 +19,6 @@ namespace CipherGuiRijndail
         public MainWindow()
         {
             InitializeComponent();
-
         }
 
         private void Button_FindFile_Click(object sender, RoutedEventArgs e)
@@ -43,7 +42,7 @@ namespace CipherGuiRijndail
                 strReader.Read(_userFile, 0, _userFile.Length);
             }
 
-            MyConsole.AppendText("Считал файл:\n");
+            MyConsole.AppendText("Считал файл (весом в " + _userFile.Length + " байт):\n");
             MyConsole.AppendText(Label_FilePath.Content + "\n");
 
         }
@@ -55,9 +54,9 @@ namespace CipherGuiRijndail
                 MyConsole.AppendText("Ошибка! Файл пуст или вы забыли его считать\n");
                 return;
             }
-            if (UserKey.Password.Length == 0)
+            if (UserKey.Password.Length < 2)
             {
-                MyConsole.AppendText("Ошибка! Не ввели пароль\n");
+                MyConsole.AppendText("Ошибка! Не ввели пароль (не менее 2 байт)\n");
                 return;
             }
 
@@ -65,11 +64,12 @@ namespace CipherGuiRijndail
             int keyLength = Convert.ToInt32(ComboBox_RijndailKeyLength.Text);
 
             Rijndail des = new Rijndail(textLength, keyLength);
+            TimeSpan tms = new TimeSpan();
 
             switch (ComboBox_ModeDes.SelectedIndex)
             {
                 case 0: // ECB
-                    _userFile = des.ECB_Chipher(_userFile, Encoding.UTF8.GetBytes(UserKey.Password.ToString()));
+                    _userFile = des.ECB_Encrypt(_userFile, Encoding.UTF8.GetBytes(UserKey.Password.ToString()),out tms);
                     break;
                 case 1: // CBC
                     break;
@@ -80,7 +80,7 @@ namespace CipherGuiRijndail
                 default: 
                     break;
             }
-            MyConsole.AppendText("Зашифровал файл:\n");
+            MyConsole.AppendText("Зашифровал файл (время шифрования "+ tms.ToString() +"):\n");
             MyConsole.AppendText(Label_FilePath.Content + "\n");
 
             using (BinaryWriter strWr = new BinaryWriter(File.Open((string)Label_FilePath.Content, FileMode.Create), Encoding.UTF8))
@@ -112,11 +112,12 @@ namespace CipherGuiRijndail
             int keyLength = Convert.ToInt32(ComboBox_RijndailKeyLength.Text);
 
             Rijndail des = new Rijndail(textLength, keyLength);
+            TimeSpan tms = new TimeSpan();
 
             switch (ComboBox_ModeDes.SelectedIndex)
             {
                 case 0: // ECB
-                    _userFile = des.ECB_Dechipher(_userFile, Encoding.UTF8.GetBytes(UserKey.Password.ToString()));
+                    _userFile = des.ECB_Decrypt(_userFile, Encoding.UTF8.GetBytes(UserKey.Password.ToString()), out tms);
                     break;
                 case 1: // CBC
                     break;
@@ -128,7 +129,7 @@ namespace CipherGuiRijndail
                     break;
             }
 
-            MyConsole.AppendText("Расшифровал файл:\n");
+            MyConsole.AppendText("Расшифровал файл (время расшифровки " + tms.ToString() + "):\n");
             MyConsole.AppendText(Label_FilePath.Content + "\n");
 
             using (BinaryWriter strWr = new BinaryWriter(File.Open((string)Label_FilePath.Content, FileMode.Create), Encoding.UTF8))
